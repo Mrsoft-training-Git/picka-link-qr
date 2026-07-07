@@ -1,7 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, X } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 type Link = {
   id: string;
@@ -54,112 +53,67 @@ export const Route = createFileRoute("/q/$pageId")({
 
 function LandingPage() {
   const { page, links } = Route.useLoaderData();
-  const [selected, setSelected] = useState<Link | null>(null);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
-      <header className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{page.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Tap a link to preview it</p>
-      </header>
+    <main className="min-h-screen">
+      {/* Dimmed backdrop */}
+      <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
 
-      {links.length === 0 ? (
-        <p className="text-center text-muted-foreground">No links yet.</p>
-      ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {links.map((link: Link) => (
-            <li key={link.id}>
-              {link.image_url ? (
-                <button
-                  type="button"
-                  onClick={() => setSelected(link)}
-                  className="group relative block w-full overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10"
-                >
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-                    <img
-                      src={link.image_url}
-                      alt=""
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-base font-semibold text-white">
-                        {link.label}
-                      </span>
-                      <ExternalLink className="h-4 w-4 shrink-0 text-white/80" />
-                    </div>
-                  </div>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setSelected(link)}
-                  className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-xl hover:shadow-primary/10 sm:h-full"
-                >
-                  <span className="truncate text-base font-semibold">{link.label}</span>
-                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Popup that appears immediately on scan */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="qr-popup-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+          <header className="mb-5 text-center">
+            <h2 id="qr-popup-title" className="text-2xl font-bold tracking-tight">
+              {page.title}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose a link to open
+            </p>
+          </header>
 
-      <footer className="mt-12 text-center">
-        <a href="/" className="text-xs text-muted-foreground hover:text-foreground">
-          Create your own multi-link QR →
-        </a>
-      </footer>
+          {links.length === 0 ? (
+            <p className="py-6 text-center text-muted-foreground">No links yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {links.map((link: Link) => (
+                <li key={link.id}>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="group flex items-center gap-3 rounded-xl border border-border bg-background p-3 transition hover:border-primary hover:bg-muted"
+                  >
+                    {link.image_url ? (
+                      <img
+                        src={link.image_url}
+                        alt=""
+                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">
+                        {link.label.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-base font-semibold">
+                      {link.label}
+                    </span>
+                    <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
 
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              className="absolute right-3 top-3 rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            {selected.image_url && (
-              <div className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
-                <img src={selected.image_url} alt="" className="h-full w-full object-cover" />
-              </div>
-            )}
-
-            <h2 className="text-xl font-bold">{selected.label}</h2>
-            <p className="mt-1 truncate text-sm text-muted-foreground">{selected.url}</p>
-
-            <div className="mt-6 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold transition hover:bg-muted"
-              >
-                Cancel
-              </button>
-              <a
-                href={selected.url}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-              >
-                Open link
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
+          <p className="mt-5 text-center text-[11px] text-muted-foreground">
+            <a href="/" className="hover:text-foreground">Create your own multi-link QR →</a>
+          </p>
         </div>
-      )}
+      </div>
     </main>
   );
 }
