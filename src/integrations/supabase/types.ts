@@ -14,7 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      qr_links: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          label: string
+          page_id: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          label: string
+          page_id: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          label?: string
+          page_id?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_links_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "qr_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_pages: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
