@@ -58,6 +58,20 @@ export const Route = createFileRoute("/q/$pageId")({
 function LandingPage() {
   const { page, links } = Route.useLoaderData();
 
+  useEffect(() => {
+    if (links.length === 1) {
+      window.location.href = links[0].url;
+    }
+  }, [links]);
+
+  if (links.length === 1) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-6">
+        <p className="text-muted-foreground">Redirecting…</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen">
       {/* Dimmed backdrop */}
