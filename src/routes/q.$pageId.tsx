@@ -29,14 +29,17 @@ export const Route = createFileRoute("/q/$pageId")({
 
     return { page, links: (links ?? []) as Link[] };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.page.title} — Pick a link` },
-          { name: "description", content: `Choose from ${loaderData.links.length} links` },
-        ]
-      : [],
-  }),
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [] };
+    const meta = [
+      { title: `${loaderData.page.title} — Pick a link` },
+      { name: "description", content: `Choose from ${loaderData.links.length} links` },
+    ];
+    if (loaderData.links.length === 1) {
+      meta.push({ httpEquiv: "refresh", content: `0;url=${loaderData.links[0].url}` });
+    }
+    return { meta };
+  },
   component: LandingPage,
   errorComponent: ({ error }) => (
     <div className="flex min-h-screen items-center justify-center p-6">
