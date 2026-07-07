@@ -67,7 +67,7 @@ function LandingPage() {
         <p className="text-center text-muted-foreground">No links yet.</p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
-          {links.map((link) => (
+          {links.map((link: Link) => (
             <li key={link.id}>
               {link.image_url ? (
                 <button
