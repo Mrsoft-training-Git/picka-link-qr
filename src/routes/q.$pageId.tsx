@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink } from "lucide-react";
 
@@ -29,14 +30,17 @@ export const Route = createFileRoute("/q/$pageId")({
 
     return { page, links: (links ?? []) as Link[] };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.page.title} — Pick a link` },
-          { name: "description", content: `Choose from ${loaderData.links.length} links` },
-        ]
-      : [],
-  }),
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [] };
+    const meta: any[] = [
+      { title: `${loaderData.page.title} — Pick a link` },
+      { name: "description", content: `Choose from ${loaderData.links.length} links` },
+    ];
+    if (loaderData.links.length === 1) {
+      meta.push({ httpEquiv: "refresh", content: `0;url=${loaderData.links[0].url}` });
+    }
+    return { meta };
+  },
   component: LandingPage,
   errorComponent: ({ error }) => (
     <div className="flex min-h-screen items-center justify-center p-6">
@@ -53,6 +57,20 @@ export const Route = createFileRoute("/q/$pageId")({
 
 function LandingPage() {
   const { page, links } = Route.useLoaderData();
+
+  useEffect(() => {
+    if (links.length === 1) {
+      window.location.href = links[0].url;
+    }
+  }, [links]);
+
+  if (links.length === 1) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-6">
+        <p className="text-muted-foreground">Redirecting…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen">
