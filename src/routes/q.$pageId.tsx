@@ -31,7 +31,7 @@ export const Route = createFileRoute("/q/$pageId")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [] };
-    const meta = [
+    const meta: any[] = [
       { title: `${loaderData.page.title} — Pick a link` },
       { name: "description", content: `Choose from ${loaderData.links.length} links` },
     ];
