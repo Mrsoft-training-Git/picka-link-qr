@@ -105,7 +105,7 @@ function CreatePage() {
       if (linksErr) throw linksErr;
 
       const url = `${window.location.origin}/q/${page.id}`;
-      setResult({ id: page.id, url });
+      setResult({ id: page.id, url, logo: centerLogo });
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -117,14 +117,15 @@ function CreatePage() {
   async function download(format: "png" | "svg" | "jpg") {
     if (!result) return;
     const fname = `qr-${result.id.slice(0, 8)}`;
+    const opts = { logo: result.logo };
     if (format === "png") {
-      const d = await generateQrPng(result.url, 2048);
+      const d = await generateQrPng(result.url, 2048, opts);
       downloadDataUrl(d, `${fname}.png`);
     } else if (format === "svg") {
-      const s = await generateQrSvg(result.url);
+      const s = await generateQrSvg(result.url, opts);
       downloadSvg(s, `${fname}.svg`);
     } else {
-      const d = await generateQrJpg(result.url, 2048);
+      const d = await generateQrJpg(result.url, 2048, opts);
       downloadDataUrl(d, `${fname}.jpg`);
     }
   }
