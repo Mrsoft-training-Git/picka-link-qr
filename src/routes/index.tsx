@@ -29,16 +29,27 @@ function newDraft(): LinkDraft {
 function CreatePage() {
   const [title, setTitle] = useState("");
   const [links, setLinks] = useState<LinkDraft[]>([newDraft(), newDraft()]);
+  const [centerLogo, setCenterLogo] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ id: string; url: string } | null>(null);
+  const [result, setResult] = useState<{ id: string; url: string; logo?: string } | null>(null);
   const [qrPng, setQrPng] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!result) return;
-    generateQrPng(result.url, 1024).then(setQrPng);
+    generateQrPng(result.url, 1024, { logo: result.logo }).then(setQrPng);
   }, [result]);
+
+  async function handleCenterLogo(file: File) {
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file, 512, 0.9);
+      setCenterLogo(dataUrl);
+    } catch {
+      setError("Could not read image");
+    }
+  }
 
   function updateLink(id: string, patch: Partial<LinkDraft>) {
     setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
@@ -94,7 +105,7 @@ function CreatePage() {
       if (linksErr) throw linksErr;
 
       const url = `${window.location.origin}/q/${page.id}`;
-      setResult({ id: page.id, url });
+      setResult({ id: page.id, url, logo: centerLogo });
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -106,14 +117,15 @@ function CreatePage() {
   async function download(format: "png" | "svg" | "jpg") {
     if (!result) return;
     const fname = `qr-${result.id.slice(0, 8)}`;
+    const opts = { logo: result.logo };
     if (format === "png") {
-      const d = await generateQrPng(result.url, 2048);
+      const d = await generateQrPng(result.url, 2048, opts);
       downloadDataUrl(d, `${fname}.png`);
     } else if (format === "svg") {
-      const s = await generateQrSvg(result.url);
+      const s = await generateQrSvg(result.url, opts);
       downloadSvg(s, `${fname}.svg`);
     } else {
-      const d = await generateQrJpg(result.url, 2048);
+      const d = await generateQrJpg(result.url, 2048, opts);
       downloadDataUrl(d, `${fname}.jpg`);
     }
   }
@@ -128,6 +140,7 @@ function CreatePage() {
   function reset() {
     setTitle("");
     setLinks([newDraft(), newDraft()]);
+    setCenterLogo(undefined);
     setResult(null);
     setQrPng("");
   }
@@ -227,6 +240,50 @@ function CreatePage() {
             className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </label>
+
+        <div className="mt-6">
+          <span className="text-sm font-semibold">Center logo (optional)</span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Adds a small image to the middle of your QR code.
+          </p>
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted transition hover:border-primary"
+              aria-label="Upload center logo"
+            >
+              {centerLogo ? (
+                <img src={centerLogo} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center text-muted-foreground">
+                  <Upload className="h-5 w-5" />
+                  <span className="mt-0.5 text-[10px]">Upload</span>
+                </div>
+              )}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleCenterLogo(f);
+                  e.target.value = "";
+                }}
+              />
+            </button>
+            {centerLogo && (
+              <button
+                type="button"
+                onClick={() => setCenterLogo(undefined)}
+                className="text-xs text-muted-foreground hover:text-destructive"
+              >
+                Remove logo
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="mt-6 space-y-4">
           <div className="flex items-center justify-between">
