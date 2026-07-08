@@ -241,6 +241,50 @@ function CreatePage() {
           />
         </label>
 
+        <div className="mt-6">
+          <span className="text-sm font-semibold">Center logo (optional)</span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Adds a small image to the middle of your QR code.
+          </p>
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted transition hover:border-primary"
+              aria-label="Upload center logo"
+            >
+              {centerLogo ? (
+                <img src={centerLogo} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center text-muted-foreground">
+                  <Upload className="h-5 w-5" />
+                  <span className="mt-0.5 text-[10px]">Upload</span>
+                </div>
+              )}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleCenterLogo(f);
+                  e.target.value = "";
+                }}
+              />
+            </button>
+            {centerLogo && (
+              <button
+                type="button"
+                onClick={() => setCenterLogo(undefined)}
+                className="text-xs text-muted-foreground hover:text-destructive"
+              >
+                Remove logo
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="mt-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Links</h2>
