@@ -29,16 +29,27 @@ function newDraft(): LinkDraft {
 function CreatePage() {
   const [title, setTitle] = useState("");
   const [links, setLinks] = useState<LinkDraft[]>([newDraft(), newDraft()]);
+  const [centerLogo, setCenterLogo] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ id: string; url: string } | null>(null);
+  const [result, setResult] = useState<{ id: string; url: string; logo?: string } | null>(null);
   const [qrPng, setQrPng] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!result) return;
-    generateQrPng(result.url, 1024).then(setQrPng);
+    generateQrPng(result.url, 1024, { logo: result.logo }).then(setQrPng);
   }, [result]);
+
+  async function handleCenterLogo(file: File) {
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file, 512, 0.9);
+      setCenterLogo(dataUrl);
+    } catch {
+      setError("Could not read image");
+    }
+  }
 
   function updateLink(id: string, patch: Partial<LinkDraft>) {
     setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
