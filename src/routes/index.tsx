@@ -140,6 +140,7 @@ function CreatePage() {
   function reset() {
     setTitle("");
     setLinks([newDraft(), newDraft()]);
+    setCenterLogo(undefined);
     setResult(null);
     setQrPng("");
   }
